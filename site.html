@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>site</title>
+<style>
+    /*table的CSS*/
+    table, th, td { 
+    border: 1px solid black; 
+    border-collapse: collapse;
+    /*table置中*/
+    margin-left:auto; 
+    margin-right:auto;
+    } 
+    th, td { 
+    border-top: 2px solid lightblue; 
+    border-bottom: 2px solid lightblue; 
+    border-left: 3px solid lightblue; 
+    border-right: 3px solid lightblue;
+    text-align: left;
+    padding: 45px;
+    } 
+    .btn { 
+    -webkit-transition-duration: 0.4 s
+    ;transition-duration: 0.4 s
+    ;
+    }
+    .btn:hover { background-color: #4ca3af
+    ;color: white
+    ;
+    } 
+</style>
+</head>
+
+<body onload="doInit()">
+    <!--進入遊戲-->
+    <div align="center" class="page_wrapper" id="page_wrapper">
+        <input type="button" value="進入遊戲" class="btn" id="btn" onclick="s.send('play###')">
+        <span align="center">人數: <span id="number">0</span></span>
+    </div>
+
+    <div align="center" class="wrapper" id="wrapper">
+        <span id="waitting"></span>
+        <span class="countdown" id="countdown"></span>
+        <div align="center" class="start" id="start">
+            <span class="countdown_state" id="countdown_state"></span>
+            <p id="win"></p>
+            <div align="center" style="font-size:25px">佔顏色</div>
+            <table>
+                <tr>
+                    <td class='cell' id='00'>.</td>
+                    <td class='cell' id='10'>.</td>
+                    <td class='cell' id='20'>.</td>
+                    <td class='cell' id='30'>.</td>
+                    <td class='cell' id='40'>.</td>
+                </tr>
+                <tr>
+                    <td class='cell' id='01'>.</td>
+                    <td class='cell' id='11'>.</td>
+                    <td class='cell' id='21'>.</td>
+                    <td class='cell' id='31'>.</td>
+                    <td class='cell' id='41'>.</td>
+                </tr>
+                <tr>
+                    <td class='cell' id='02'>.</td>
+                    <td class='cell' id='12'>.</td>
+                    <td class='cell' id='22'>.</td>
+                    <td class='cell' id='32'>.</td>
+                    <td class='cell' id='42'>.</td>
+                </tr>
+                <tr>
+                    <td class='cell' id='03'>.</td>
+                    <td class='cell' id='13'>.</td>
+                    <td class='cell' id='23'>.</td>
+                    <td class='cell' id='33'>.</td>
+                    <td class='cell' id='43'>.</td>
+                </tr>
+                <tr>
+                    <td class='cell' id='04'>.</td>
+                    <td class='cell' id='14'>.</td>
+                    <td class='cell' id='24'>.</td>
+                    <td class='cell' id='34'>.</td>
+                    <td class='cell' id='44'>.</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script>
+        //可以變成一個ID，作為更新和操作
+        let number = document.getElementById("number")
+        let btn = document.getElementById("btn")
+        let page_wrapper = document.getElementById("page_wrapper")
+        let wrapper = document.getElementById("wrapper")
+        let start = document.getElementById("start")
+        let waitting = document.getElementById("waitting")
+        let countdown = document.getElementById("countdown")
+        let countdown_state = document.getElementById("countdown_state")
+        //顯示表格裡的狀況
+        let cells = document.querySelectorAll(".cell");
+        let win = document.getElementById("win")
+        let flag = 0
+        function doInit() {
+            function log_msg(msg) {
+                console.log(msg);
+            }
+            try {
+                var host = "ws://localhost:4545/"; //設定socker server的ip:port
+                /*if(window.location.hostname) {
+                    host = "ws://" + window.location.hostname + ":4545/";
+                }*/
+
+                s = new WebSocket(host); //建立socket元件
+                //設定幾個主要事件
+                s.onopen = function (e) { log_msg("connected..."); s.send("number#") };
+                s.onclose = function (e) { log_msg("connection closed."); };
+                s.onerror = function (e) { log_msg("connection error."); };
+
+
+                //當server送訊息來時
+                s.onmessage = function (e) {
+                    number.innerHTML = e.data
+                    console.log("onmessage:")
+                    console.log(e.data)
+                }
+                //用於記錄錯誤
+            } catch (ex) {
+                log_msg("connection exception:" + ex);
+            }
+        }
+        document.getElementById("btn").addEventListener("click", function () {
+            s.onmessage = function (e) {
+                let notify = e.data.split("#")
+                n = notify[3]
+                if (n === "notify") {
+                    strs = e.data.split('#');
+                    //陣列位置的第二元素和第一元素相加
+                    let position = strs[1] + strs[0]
+                    if (strs[2] > 0) {
+                        document.getElementById(position).style.backgroundColor = "lightgreen"
+                        document.getElementById(position).innerText = strs[2]
+                    } else if (strs[2] < 0) {
+                        document.getElementById(position).style.backgroundColor = "lightpink"
+                        document.getElementById(position).innerText = -strs[2]
+                    } else {
+                        document.getElementById(position).style.backgroundColor = "white"
+                        document.getElementById(position).innerText = "0"
+                    }
+                    //執行的狀態
+                    console.log(position + " " + strs[2])
+                } else if (n === "end") {
+                    //存儲優勝者
+                    let winner = notify[2]
+                    if (winner === "0") {
+                        win.innerHTML = "亮綠獲勝"
+                        let down = 5
+                        let fight = setInterval(function () {
+                            down--
+                            if (down <= 0) {
+                                clearInterval(fight)
+                                s.send("out")
+                                location.reload()
+                            }
+                        }, 1000)
+                    } else if (winner === "1") {
+                        win.innerHTML = "亮粉獲勝"
+                        let down = 8
+                        let fight = setInterval(function () {
+                            down--
+                            if (down <= 0) {
+                                clearInterval(fight)
+                                s.send("out")
+                                location.reload()
+                            }
+                        }, 1000)
+                    } else {
+                        win.innerHTML = "平手"
+                        let down = 5
+                        let fight = setInterval(function () {
+                            down--
+                            if (down <= 0) {
+                                clearInterval(fight)
+                                s.send("out")
+                                location.reload()
+                            }
+                        }, 1000)
+                    }
+                } else {
+                    if (e.data != "對戰...") {
+                        m = e.data.split("#")
+                        if (m[1] === "prepare") {
+                            console.log(m[1])
+                            number.innerHTML = m[0]
+                        } else {
+                            console.log(m)
+                            number.innerHTML = e.data
+                            page_wrapper.style.display = "none"
+                            wrapper.style.display = "block"
+                            waitting.innerHTML = "等待其他玩家"
+                            console.log("click up:")
+                            console.log(e.data)
+                            if (e.data == 2) {
+                                let number = 5
+                                waitting.innerHTML = "已加入，"
+                                let interval = setInterval(function () {
+                                    number--
+                                    countdown.innerText = "開始倒計:" + number
+                                    if (number <= 0) {
+                                        clearInterval(interval)
+                                        countdown.style.display = "none"
+                                        waitting.innerHTML = "開始對戰:"
+                                        start.style.display = "block"
+                                        let count = 30 //對戰倒計時
+                                        let fight = setInterval(function () {
+                                            count--
+                                            countdown_state.innerText = count
+                                            if (count <= 0) {
+                                                clearInterval(fight)
+                                                waitting.innerHTML = "對戰結束"
+                                                flag = 1
+                                                s.send("stop#")
+                                            }
+                                        }, 1000)
+                                    }
+                                }, 1000)
+                            }
+                        }
+
+                    } else {
+                        alert("對戰...")
+                        number.innerHTML = e.data
+                        console.log("click down:")
+                        console.log(e.data)
+                    }
+                }
+            }
+        })
+
+        cells.forEach(function (el) {
+            el.onclick = function () {
+                id = this.id;
+                console.log(id)
+                if (flag == 0) {
+                    s.send("land#" + id)
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<style> 
+table, th, td { 
+    border: 1px solid black; 
+    border-collapse: collapse; 
+} 
+th, td { 
+    padding: 15px; 
+} 
+</style> 
+</head> 
+<body> 
+<table id="chessboard"> 
+    <tr> 
+        <td id="cell1"></td> 
+        <td id="cell2"></td> 
+        <td id="cell3"></td> 
+        <td id="cell4"></td> 
+        <td id="cell5"></td> 
+    </tr> 
+    <tr> 
+        <td id="cell6"></td> 
+        <td id="cell7"></td> 
+        <td id="cell8"></td> 
+        <td id="cell9"></td> 
+        <td id="cell10"></td> 
+    </tr> 
+    <tr> 
+        <td id="cell11"></td> 
+        <td id="cell12"></td> 
+        <td id="cell13"></td> 
+        <td id="cell14"></td> 
+        <td id="cell15"></td> 
+    </tr> 
+    <tr> 
+        <td id="cell16"></td> 
+        <td id="cell17"></td> 
+        <td id="cell18"></td> 
+        <td id="cell19"></td> 
+        <td id="cell20"></td> 
+    </tr> 
+    <tr> 
+        <td id="cell21"></td> 
+        <td id="cell22"></td> 
+        <td id="cell23"></td> 
+        <td id="cell24"></td> 
+        <td id="cell25"></td> 
+    </tr> 
+</table> 
+<script> 
+// Initialize all cells with a defense value of 0 
+var cells = document.getElementsByTagName("td"); 
+for (var i = 0; i < cells.length; i++) { 
+    cells[i].defense = 0; 
+} 
+
+var currentPlayer = "Player 1"; 
+var player1Score = 0; 
+var player2Score = 0; 
+
+// Set a 30 second timer 
+var timer = 30; 
+setInterval(function() { 
+    timer--; 
+    if (timer == 0) { 
+        // Determine the winner 
+        if (player1Score > player2Score) { 
+            alert("Player 1 wins!"); 
+        } else if (player2Score > player1Score) { 
+            alert("Player 2 wins!"); 
+        } else { 
+            alert("It's a tie!"); 
+        } 
+    } 
+}, 1000); 
+
+// Add an event listener to each cell to handle clicks 
+for (var i = 0; i < cells.length; i++) { 
+    cells[i].addEventListener("click", function() { 
+        if (this.style.backgroundColor == "") { 
+            // Cell is unoccupied 
+            if (currentPlayer == "Player 1") { 
+                this.style.backgroundColor = "red";
+this.defense = 1;
+player1Score++;
+currentPlayer = "Player 2";
+} else {
+this.style.backgroundColor = "blue";
+this.defense = 1;
+player2Score++;
+currentPlayer = "Player 1";
+}
+} else if (this.style.backgroundColor == "red" && currentPlayer == "Player 1") {
+// Cell is occupied by player 1
+this.defense++;
+} else if (this.style.backgroundColor == "blue" && currentPlayer == "Player 2") {
+// Cell is occupied by player 2
+this.defense++;
+} else {
+// Cell is occupied by the other player
+this.defense--;
+if (this.defense == 0) {
+this.style.backgroundColor = "";
+if (currentPlayer == "Player 1") {
+player1Score--;
+} else {
+player2Score--;
+}
+}
+}
+});
+}
+</script>
+
+</body> 
+</html> 
